@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import { classConfig } from '../config/classConfig';
-import { GAME_CONSTANTS } from '../config/gameConstants';
+import { GAME_CONSTANTS, getRankByScore } from '../config/gameConstants';
 import { StageConfig, STAGES_CONFIG } from '../config/stagesConfig';
 import { Boss3D } from '../entities/Boss3D';
 import { Enemy3D } from '../entities/Enemy3D';
 import { PickupPool } from '../entities/PickupPool';
 import { PlayerShip } from '../entities/PlayerShip';
 import { ProjectilePool } from '../entities/ProjectilePool';
+import { LeaderboardManager } from '../systems/LeaderboardManager';
 import { GameContext, GameSceneInterface } from './SceneTypes';
 
 export class GameScene implements GameSceneInterface {
@@ -592,6 +593,9 @@ export class GameScene implements GameSceneInterface {
 
   private triggerGameOver(): void {
     this.state = 'game_over';
+    const rank = getRankByScore(this.ctx.score);
+    LeaderboardManager.saveScore(this.ctx.playerName, this.ctx.score, rank.title);
+
     const msgs = classConfig.gameOverMessages;
     const quote = msgs[Math.floor(Math.random() * msgs.length)];
 

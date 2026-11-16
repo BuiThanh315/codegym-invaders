@@ -59,30 +59,9 @@ export class Boss3D {
   }
 
   private buildUniqueBossArchitecture(config: BossConfig, assets: AssetLoader): void {
-    const mainMat = new THREE.MeshStandardMaterial({
-      color: config.color,
-      emissive: config.color,
-      emissiveIntensity: 0.45,
-      roughness: 0.35,
-      metalness: 0.35,
-    });
-    const accentMat = new THREE.MeshBasicMaterial({ color: config.accentColor });
-
     if (config.id === 1) {
-      // Boss 1: Thẻ Không Đóng — lõi giáp 3D vững chắc sau lưng + các thẻ HTML/CSS bay quanh
+      // Boss 1: Thẻ Không Đóng — giữ nguyên toàn bộ mặt Boss, chỉ có các thẻ HTML/CSS bay quanh 2 bên
       if (this.voxelBody) this.voxelBody.scale.set(1.05, 1.0, 1.0);
-      const armorCore = new THREE.Mesh(
-        new THREE.BoxGeometry(1.75, 2.8, 0.55),
-        new THREE.MeshStandardMaterial({
-          color: 0x16a34a,
-          emissive: 0x22c55e,
-          emissiveIntensity: 0.35,
-          roughness: 0.4,
-        })
-      );
-      armorCore.position.set(0.15, 1.25, -0.25);
-      this.coreGroup.add(armorCore);
-
       const tags = ['<div>', '<span>', 'flex'];
       tags.forEach((tag, i) => {
         const tex = assets.getCodeLabelTexture(tag, '#431407', '#fb923c');
@@ -91,36 +70,44 @@ export class Boss3D {
           new THREE.MeshBasicMaterial({ map: tex })
         );
         const angle = (i / tags.length) * Math.PI * 2;
-        card.position.set(Math.cos(angle) * 2.7, 1.3 + i * 0.4, Math.sin(angle) * 1.4);
+        card.position.set(Math.cos(angle) * 3.1, 1.3 + i * 0.4, Math.sin(angle) * 1.4 - 0.3);
         this.coreGroup.add(card);
         this.animParts.push(card);
       });
     } else if (config.id === 2) {
-      // Boss 2: Vòng Lặp Vô Hạn — Thiết kế hình tròn đa tầng xoáy 3D (không bó khung chữ nhật)
+      // Boss 2: Vòng Lặp Vô Hạn — lấy hình ảnh Boss làm chính, các vòng hiệu ứng chạy mờ xung quanh
       if (this.voxelBody) {
-        this.voxelBody.scale.set(0.85, 0.85, 0.85);
-        this.voxelBody.rotation.x = -0.55;
+        this.voxelBody.scale.set(1.0, 1.0, 1.0);
+        this.voxelBody.rotation.x = -0.38;
       }
-      const eyeOrb = new THREE.Mesh(
-        new THREE.SphereGeometry(0.9, 18, 16),
-        new THREE.MeshStandardMaterial({
-          color: 0x4ade80,
-          emissive: 0x22c55e,
-          emissiveIntensity: 0.8,
-        })
-      );
-      eyeOrb.position.set(0, 1.35, 0.35);
-      this.coreGroup.add(eyeOrb);
 
-      // 3 vòng tròn đồng tâm xoay ngược chiều nhau tạo hình xoáy tròn
-      const radii = [1.75, 2.35, 2.95];
+      const radii = [2.9, 3.45, 4.0];
+      const orbGeo = new THREE.SphereGeometry(0.16, 12, 10);
+      const haloGeo = new THREE.SphereGeometry(0.32, 12, 10);
+      const orbMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const haloMat = new THREE.MeshBasicMaterial({
+        color: config.accentColor,
+        transparent: true,
+        opacity: 0.5,
+      });
+
       radii.forEach((r, idx) => {
-        const ring = new THREE.Mesh(
-          new THREE.TorusGeometry(r, 0.12, 10, 32),
-          idx % 2 === 0 ? accentMat : mainMat
-        );
-        ring.position.set(0, 1.35, 0);
-        ring.rotation.x = -0.55 + idx * 0.18;
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: idx % 2 === 0 ? config.accentColor : config.color,
+          transparent: true,
+          opacity: 0.28 - idx * 0.05,
+        });
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.06, 8, 40), ringMat);
+        ring.position.set(0, 1.35, -0.4);
+        ring.rotation.x = -0.45 + idx * 0.15;
+        ring.rotation.z = idx * 2.1;
+
+        // 1 đốm sáng di chuyển dọc theo mỗi vòng tròn
+        const orbGroup = new THREE.Group();
+        orbGroup.position.set(r, 0, 0);
+        orbGroup.add(new THREE.Mesh(orbGeo, orbMat), new THREE.Mesh(haloGeo, haloMat));
+        ring.add(orbGroup);
+
         this.coreGroup.add(ring);
         this.animParts.push(ring);
       });
@@ -150,74 +137,94 @@ export class Boss3D {
         this.animParts.push(bolt);
       }
     } else if (config.id === 4) {
-      // Boss 4: DROP TABLE — Xe ủi bọc thép 3D + lưỡi ủi vàng-đen + 3 trụ Database bay quanh
-      const blade = new THREE.Mesh(
-        new THREE.BoxGeometry(4.4, 0.75, 0.55),
-        new THREE.MeshStandardMaterial({
-          color: 0xfacc15,
-          emissive: 0xeab308,
-          emissiveIntensity: 0.35,
-        })
-      );
-      blade.position.set(0, 0.15, 1.35);
-      this.coreGroup.add(blade);
-
-      const dbGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.85, 12);
+      // Boss 4: DROP TABLE — bỏ khối vàng che boss, thiết kế 3 biểu tượng Database 3 tầng xoay quanh
+      const discGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.18, 18);
+      const sepGeo = new THREE.CylinderGeometry(0.47, 0.47, 0.05, 18);
       const dbMat = new THREE.MeshStandardMaterial({
-        color: 0x38bdf8,
-        emissive: 0x0284c7,
-        emissiveIntensity: 0.5,
+        color: 0x0284c7,
+        emissive: 0x38bdf8,
+        emissiveIntensity: 0.45,
+        roughness: 0.3,
       });
+      const sepMat = new THREE.MeshBasicMaterial({ color: 0xbae6fd });
+
       for (let i = 0; i < 3; i++) {
-        const db = new THREE.Mesh(dbGeo, dbMat);
+        const dbIcon = new THREE.Group();
+        for (let tier = 0; tier < 3; tier++) {
+          const disc = new THREE.Mesh(discGeo, dbMat);
+          disc.position.y = (tier - 1) * 0.28;
+          dbIcon.add(disc);
+          if (tier < 2) {
+            const sep = new THREE.Mesh(sepGeo, sepMat);
+            sep.position.y = (tier - 0.5) * 0.28;
+            dbIcon.add(sep);
+          }
+        }
         const angle = (i / 3) * Math.PI * 2;
-        db.position.set(Math.cos(angle) * 2.8, 2.1, Math.sin(angle) * 1.4);
-        this.coreGroup.add(db);
-        this.animParts.push(db);
+        dbIcon.position.set(Math.cos(angle) * 3.1, 1.8, Math.sin(angle) * 1.4 - 0.3);
+        this.coreGroup.add(dbIcon);
+        this.animParts.push(dbIcon);
       }
     } else {
-      // Boss 5: DEADLINE — Rồng lửa 3D có đôi cánh sải rộng vỗ nhịp + bảng đồng hồ 00:01:00
-      const wingGeo = new THREE.BoxGeometry(2.6, 1.4, 0.18);
-      const wingMat = new THREE.MeshStandardMaterial({
-        color: 0xe11d48,
-        emissive: 0xf97316,
-        emissiveIntensity: 0.7,
-      });
-      const wL = new THREE.Group();
-      const wLMesh = new THREE.Mesh(wingGeo, wingMat);
-      wLMesh.position.x = -1.4;
-      wL.add(wLMesh);
-      wL.position.set(-1.3, 1.9, -0.3);
+      // Boss 5: DEADLINE — Đôi cánh rồng chi tiết từ ảnh sprite phía sau + các trang giấy chi tiết xoay quanh
+      const wingTex = assets.getDragonWingTexture();
+      const wL = this.buildDragonWing(-1, wingTex);
+      wL.position.set(-0.9, 1.9, -0.55);
       this.wingLeft = wL;
 
-      const wR = new THREE.Group();
-      const wRMesh = new THREE.Mesh(wingGeo, wingMat);
-      wRMesh.position.x = 1.4;
-      wR.add(wRMesh);
-      wR.position.set(1.3, 1.9, -0.3);
+      const wR = this.buildDragonWing(1, wingTex);
+      wR.position.set(0.9, 1.9, -0.55);
       this.wingRight = wR;
 
-      const clockTex = assets.getCodeLabelTexture('00:01:00', '#450a0a', '#facc15');
-      const clockBoard = new THREE.Mesh(
-        new THREE.BoxGeometry(2.5, 0.85, 0.25),
-        new THREE.MeshBasicMaterial({ map: clockTex })
-      );
-      clockBoard.position.set(0, 1.25, 0.85);
-      clockBoard.rotation.x = -0.35;
-
-      // Các tờ giấy deadline bay xoay quanh Boss 5
-      const paperGeo = new THREE.BoxGeometry(0.55, 0.7, 0.05);
-      const paperMat = new THREE.MeshBasicMaterial({ color: 0xfef3c7 });
+      const paperTex = assets.createPaperPageTexture();
+      const paperGeo = new THREE.BoxGeometry(0.72, 0.92, 0.04);
+      const paperMat = new THREE.MeshBasicMaterial({ map: paperTex });
       for (let i = 0; i < 4; i++) {
         const paper = new THREE.Mesh(paperGeo, paperMat);
         const angle = (i / 4) * Math.PI * 2;
-        paper.position.set(Math.cos(angle) * 3.0, 1.6 + (i % 2) * 0.5, Math.sin(angle) * 1.5);
+        paper.position.set(Math.cos(angle) * 3.2, 1.65 + (i % 2) * 0.45, Math.sin(angle) * 1.4 - 0.2);
         this.coreGroup.add(paper);
         this.animParts.push(paper);
       }
 
-      this.coreGroup.add(wL, wR, clockBoard);
+      this.coreGroup.add(wL, wR);
     }
+  }
+
+  private buildDragonWing(side: -1 | 1, wingTex: THREE.Texture | null): THREE.Group {
+    const wing = new THREE.Group();
+    if (wingTex) {
+      const mat = new THREE.MeshBasicMaterial({
+        map: wingTex,
+        transparent: true,
+        alphaTest: 0.1,
+        side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 2.4), mat);
+      // Ảnh gốc có khớp vai bên phải -> cánh trái giữ nguyên, cánh phải lật ngược trục X
+      mesh.scale.x = side === -1 ? 1 : -1;
+      mesh.position.set(side * 1.85, 0.25, 0);
+      mesh.rotation.x = -0.35;
+      wing.add(mesh);
+      return wing;
+    }
+
+    const bladeColors = [0xe11d48, 0xf97316, 0xfacc15];
+    for (let i = 0; i < 3; i++) {
+      const length = 2.5 - i * 0.45;
+      const height = 0.52 - i * 0.08;
+      const mat = new THREE.MeshStandardMaterial({
+        color: bladeColors[i],
+        emissive: bladeColors[i],
+        emissiveIntensity: 0.55,
+        roughness: 0.35,
+      });
+      const feather = new THREE.Mesh(new THREE.BoxGeometry(length, height, 0.1), mat);
+      feather.position.set(side * (length * 0.5 + 0.15), 0.35 - i * 0.48, -0.1 * i);
+      feather.rotation.z = side * (0.28 - i * 0.26);
+      wing.add(feather);
+    }
+    return wing;
   }
 
   public takeDamage(dmg: number): boolean {
@@ -239,13 +246,9 @@ export class Boss3D {
     if (!this.alive) return;
     this.elapsed += dt;
 
-    // Animation riêng cho từng Boss
+    // Giữ hình ảnh Boss đứng vững, không xoay vòng thân Boss 2
     if (this.voxelBody) {
-      if (this.config.id === 2) {
-        this.voxelBody.rotation.z += dt * 1.4; // Boss 2 xoay tròn
-      } else {
-        this.voxelBody.rotation.y = Math.sin(this.elapsed * 1.1) * 0.22;
-      }
+      this.voxelBody.rotation.y = Math.sin(this.elapsed * 1.1) * 0.22;
     }
 
     this.animParts.forEach((part, idx) => {

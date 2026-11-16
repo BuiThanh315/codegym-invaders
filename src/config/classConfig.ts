@@ -11,34 +11,27 @@ export interface ClassConfig {
 }
 
 /**
- * File cấu hình cá nhân hóa cho từng lớp CodeGym.
- * Chỉ cần sửa các giá trị bên dưới để dùng cho buổi lễ 20/11 của lớp bạn.
+ * Cấu hình chung cho sự kiện 20/11 (không fix cứng tên thầy/cô hay học viên).
+ * Có thể truyền qua URL (?teacher=...&class=...) hoặc sửa trực tiếp tại đây.
  */
+function getQueryParam(key: string): string {
+  if (typeof window === 'undefined') return '';
+  return new URLSearchParams(window.location.search).get(key)?.trim() ?? '';
+}
+
 export const classConfig: ClassConfig = {
-  teacherName: 'Thầy Minh',
+  teacherName: getQueryParam('teacher') || 'Thầy/Cô',
   teacherTitle: 'Thầy/Cô',
-  className: 'C0824G1',
-  teacherCatchphrase: 'Đọc kỹ log lỗi trước khi hỏi nhé!',
+  className: getQueryParam('class') || 'CodeGym',
+  teacherCatchphrase: '',
   classMemory:
-    'Nhớ những buổi tối cả lớp cùng nhau ngồi fix lỗi đến tận 10h đêm, rồi vỡ òa khi màn hình hiện chữ Build Success.',
-  studentList: [
-    'Minh Anh',
-    'Hoàng Nam',
-    'Thảo Vy',
-    'Đức Thịnh',
-    'Gia Bảo',
-    'Khánh Linh',
-    'Quốc Hưng',
-    'Ngọc Hà',
-    'Tuấn Kiệt',
-    'Bảo Trâm',
-  ],
-  easterEggKeywords: ['20/11', 'thầy minh', 'thay minh', 'codegym'],
+    'Cảm ơn Thầy/Cô đã luôn kiên nhẫn lắng nghe từng câu hỏi, đồng hành qua từng dòng code lỗi và truyền cảm hứng cho chúng em mỗi ngày.',
+  studentList: [],
+  easterEggKeywords: ['20/11', 'codegym', 'thầy cô', 'thay co'],
   skipToEndingCommand: 'sudo thank-you',
   gameOverMessages: [
     'Debug lại nào, đừng bỏ cuộc!',
     'Lỗi là cách học nhanh nhất. Chơi lại nhé!',
-    'Thầy vẫn tin em. Thử thêm lần nữa!',
+    'Thầy/Cô vẫn tin em. Thử thêm lần nữa!',
   ],
 };
-

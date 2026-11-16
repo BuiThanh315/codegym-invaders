@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { classConfig } from '../config/classConfig';
 import { getRankByScore } from '../config/gameConstants';
+import { LeaderboardManager } from '../systems/LeaderboardManager';
 import { GameContext, GameSceneInterface } from './SceneTypes';
 
 export class EndingScene implements GameSceneInterface {
@@ -16,19 +17,27 @@ export class EndingScene implements GameSceneInterface {
     this.ctx.sound.startBgm();
 
     const rank = getRankByScore(this.ctx.score);
+    LeaderboardManager.saveScore(this.ctx.playerName, this.ctx.score, rank.title);
+
     const letterText = `Gửi ${classConfig.teacherName},
 
-Nhân ngày 20/11, cả lớp ${classConfig.className} muốn nói lời cảm ơn vì đã kiên nhẫn với từng bug, từng câu hỏi ngớ ngẩn, từng buổi tối thầy cô ở lại giải thích.
+Nhân ngày 20/11, tập thể học viên ${classConfig.className} muốn nói lời cảm ơn vì đã kiên nhẫn với từng bug, từng câu hỏi ngớ ngẩn, từng buổi tối thầy cô ở lại giải thích.
 
 ${classConfig.classMemory}
 
 Chúc ${classConfig.teacherName} luôn khỏe, và mãi là người mentor tuyệt vời của chúng em.
 
-Học trò của Thầy/Cô, ${this.ctx.playerName} và cả lớp ${classConfig.className}.`;
+Học trò của Thầy/Cô, ${this.ctx.playerName} và tập thể ${classConfig.className}.`;
 
-    const creditsHtml = classConfig.studentList
-      .map((name) => `<span>✨ ${this.ctx.ui.escapeHtml(name)}</span>`)
-      .join('');
+    const creditNames =
+      classConfig.studentList.length > 0
+        ? classConfig.studentList
+        : Array.from(new Set(LeaderboardManager.getTop10().map((e) => e.name)));
+
+    const creditsHtml =
+      creditNames.length > 0
+        ? creditNames.map((name) => `<span>✨ ${this.ctx.ui.escapeHtml(name)}</span>`).join('')
+        : `<span>✨ Tập thể học viên ${this.ctx.ui.escapeHtml(classConfig.className)}</span>`;
 
     const root = this.ctx.ui.getRoot();
     root.innerHTML = `

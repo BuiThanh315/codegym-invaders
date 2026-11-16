@@ -28,6 +28,7 @@ export class AssetLoader {
   private readonly minionVoxels = new Map<string, VoxelModelData>();
   private readonly bossTextures = new Map<number, THREE.Texture>();
   private readonly bossVoxels = new Map<number, VoxelModelData>();
+  private dragonWingTexture: THREE.Texture | null = null;
   private bgTexture: THREE.Texture | null = null;
 
   public async preload(): Promise<void> {
@@ -74,6 +75,12 @@ export class AssetLoader {
       );
     }
 
+    tasks.push(
+      this.loadTexture('./assets/bosses/dragon-wing.png').then((tex) => {
+        if (tex) this.dragonWingTexture = tex;
+      })
+    );
+
     await Promise.all(tasks);
   }
 
@@ -111,6 +118,10 @@ export class AssetLoader {
 
   public getBossVoxel(id: number): VoxelModelData | null {
     return this.bossVoxels.get(id) ?? null;
+  }
+
+  public getDragonWingTexture(): THREE.Texture | null {
+    return this.dragonWingTexture;
   }
 
   public getCodeLabelTexture(text: string, bgHex = '#0f172a', borderHex = '#38bdf8'): THREE.CanvasTexture {
@@ -168,6 +179,45 @@ export class AssetLoader {
       ctx.fillStyle = '#fb7185';
       ctx.font = 'bold 34px sans-serif';
       ctx.fillText('❤ 20/11', 128, 122);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }
+
+  public createPaperPageTexture(): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 160;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      // Nền trang giấy trắng ngà
+      ctx.fillStyle = '#fefce8';
+      ctx.fillRect(0, 0, 128, 160);
+
+      // Viền trang giấy & góc gấp
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(2, 2, 124, 156);
+
+      ctx.fillStyle = '#fde68a';
+      ctx.beginPath();
+      ctx.moveTo(96, 0);
+      ctx.lineTo(128, 32);
+      ctx.lineTo(96, 32);
+      ctx.closePath();
+      ctx.fill();
+
+      // Tiêu đề đỏ URGENT
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(14, 16, 72, 14);
+
+      // Các dòng chữ trên trang giấy
+      ctx.fillStyle = '#64748b';
+      for (let y = 46; y <= 136; y += 16) {
+        const lineW = y === 136 ? 60 : 96;
+        ctx.fillRect(16, y, lineW, 6);
+      }
     }
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;

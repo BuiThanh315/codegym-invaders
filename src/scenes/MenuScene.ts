@@ -1,5 +1,6 @@
 import { classConfig } from '../config/classConfig';
 import { PlayerShip } from '../entities/PlayerShip';
+import { LeaderboardManager } from '../systems/LeaderboardManager';
 import { GameContext, GameSceneInterface } from './SceneTypes';
 
 export class MenuScene implements GameSceneInterface {
@@ -13,36 +14,95 @@ export class MenuScene implements GameSceneInterface {
     this.ctx.easterEggFlowerMode = false;
     this.ctx.sound.setFestiveMode(false);
 
-    // Hiển thị Laptop có cánh 3D xoay nhẹ làm nền Menu
+    // Hiển thị Laptop có cánh 3D xoay nhẹ làm nền Landing
     this.demoShip = new PlayerShip(this.ctx.threeScene, this.ctx.assets);
-    this.demoShip.group.position.set(0, 1.5, 2.5);
+    this.demoShip.group.position.set(0, 1.4, 2.2);
+
+    const top10 = LeaderboardManager.getTop10();
+    const leaderboardRows =
+      top10.length > 0
+        ? top10
+            .map((entry, idx) => {
+              const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+              return `
+                <div class="lb-row ${idx < 3 ? 'lb-top' : ''}">
+                  <span class="lb-rank">${medal}</span>
+                  <div class="lb-info">
+                    <div class="lb-name">${this.ctx.ui.escapeHtml(entry.name)}</div>
+                    <div class="lb-title">${this.ctx.ui.escapeHtml(entry.rankTitle)}</div>
+                  </div>
+                  <span class="lb-score">${entry.score.toLocaleString('vi-VN')}</span>
+                </div>
+              `;
+            })
+            .join('')
+        : `<div class="lb-empty">Chưa có lượt chơi nào.<br/>Hãy là người đầu tiên ghi danh! ✨</div>`;
 
     const root = this.ctx.ui.getRoot();
     root.innerHTML = `
-      <div class="menu-screen interactive">
-        <div class="menu-card">
-          <div class="menu-badge">CHÀO MỪNG NGÀY NHÀ GIÁO VIỆT NAM 20/11</div>
-          <h1 class="menu-title">CodeGym Invaders:<br/>Bảo vệ ngày 20/11</h1>
-          <p class="menu-subtitle">
-            Lái chiếc <strong>Laptop có cánh 3D</strong>, bắn hoa hồng và tiêu diệt đàn Bug để trao lá thư tri ân tới <strong>${this.ctx.ui.escapeHtml(classConfig.teacherName)}</strong>!
-          </p>
-          <div class="input-group">
-            <label for="player-name-input">Tên học viên (hoặc mã bí mật):</label>
-            <input
-              id="player-name-input"
-              class="text-input"
-              type="text"
-              maxlength="32"
-              placeholder="Ví dụ: Minh Anh, 20/11..."
-              value="${this.ctx.ui.escapeHtml(this.ctx.playerName)}"
-            />
+      <div class="landing-screen interactive">
+        <div class="landing-shell">
+          <div class="landing-topbar">
+            <div class="menu-badge">🌹 CHÀO MỪNG NGÀY NHÀ GIÁO VIỆT NAM 20/11</div>
+            <div class="stage-roadmap">
+              <span>1. HTML/CSS</span>
+              <span class="arrow">→</span>
+              <span>2. JavaScript</span>
+              <span class="arrow">→</span>
+              <span>3. Java Core</span>
+              <span class="arrow">→</span>
+              <span>4. SQL/DB</span>
+              <span class="arrow">→</span>
+              <span class="final">5. DEADLINE</span>
+            </div>
           </div>
-          <button id="start-game-btn" class="btn-primary">🚀 Bắt đầu Debug</button>
-          <div id="easter-egg-feedback"></div>
-          <p class="menu-hint">
-            Điều khiển: Chuột / Chạm kéo trên màn hình hoặc phím mũi tên / WASD + Space.<br/>
-            Mẹo: Thử nhập <code>20/11</code>, tên Thầy/Cô hoặc <code>sudo thank-you</code>!
-          </p>
+
+          <div class="landing-grid">
+            <div class="menu-card landing-hero">
+              <h1 class="menu-title">CodeGym Invaders:<br/>Bảo vệ ngày 20/11</h1>
+              <p class="menu-subtitle">
+                Điều khiển <strong>Laptop có cánh 3D</strong>, bắn hoa hồng tri ân và vượt qua 5 chặng Bug để gửi lá thư cảm ơn đến <strong>${this.ctx.ui.escapeHtml(classConfig.teacherName)}</strong>!
+              </p>
+
+              <div class="input-group">
+                <label for="player-name-input">Tên người chơi (hoặc mã bí mật)</label>
+                <input
+                  id="player-name-input"
+                  class="text-input"
+                  type="text"
+                  maxlength="32"
+                  placeholder="Nhập tên của bạn..."
+                  value="${this.ctx.ui.escapeHtml(this.ctx.playerName)}"
+                />
+              </div>
+
+              <button id="start-game-btn" class="btn-primary btn-glow">🚀 Bắt đầu Debug</button>
+              <div id="easter-egg-feedback"></div>
+
+              <div class="controls-strip">
+                <span>🖱️ Di chuyển &amp; Click để bắn</span>
+                <span>⌨️ WASD / Mũi tên + Space</span>
+                <span>📱 Chạm &amp; Kéo</span>
+              </div>
+              <p class="menu-hint">
+                Mẹo: Thử nhập <code>20/11</code> hoặc <code>sudo thank-you</code>!
+              </p>
+            </div>
+
+            <div class="menu-card leaderboard-card">
+              <div class="lb-header">
+                <span class="lb-badge">🏆 BẢNG XẾP HẠNG TOP 10</span>
+                <span class="lb-sub">Điểm cao nhất</span>
+              </div>
+              <div class="lb-list">
+                ${leaderboardRows}
+              </div>
+            </div>
+          </div>
+
+          <div class="landing-footer">
+            "Mỗi bug được fix là một bài học. Đằng sau mỗi lần fix là một người thầy kiên nhẫn." ❤
+          </div>
         </div>
       </div>
     `;
@@ -61,7 +121,7 @@ export class MenuScene implements GameSceneInterface {
         normalized.includes(kw.toLowerCase())
       );
       if (isFlowerEgg) {
-        feedback.innerHTML = `<div class="easter-banner">🌹 Easter Egg 20/11: Đạn hoa toàn màn hình & Nhạc lễ hội!</div>`;
+        feedback.innerHTML = `<div class="easter-banner">🌹 Easter Egg 20/11: Đạn hoa toàn màn hình &amp; Nhạc lễ hội!</div>`;
       } else {
         feedback.innerHTML = '';
       }
@@ -78,7 +138,7 @@ export class MenuScene implements GameSceneInterface {
       const normalized = rawName.toLowerCase();
 
       if (normalized === classConfig.skipToEndingCommand.toLowerCase()) {
-        this.ctx.playerName = classConfig.className;
+        this.ctx.playerName = 'Học viên';
         this.ctx.sound.setFestiveMode(true);
         this.ctx.sound.startBgm();
         this.ctx.switchScene('ending');
@@ -90,7 +150,7 @@ export class MenuScene implements GameSceneInterface {
       );
       this.ctx.easterEggFlowerMode = isFlowerEgg;
       this.ctx.sound.setFestiveMode(isFlowerEgg);
-      this.ctx.playerName = rawName || 'Học viên CodeGym';
+      this.ctx.playerName = rawName || 'Học viên';
       this.ctx.sound.startBgm();
       this.ctx.switchScene('intro');
     });
@@ -102,7 +162,7 @@ export class MenuScene implements GameSceneInterface {
     this.elapsed += dt;
     if (this.demoShip) {
       this.demoShip.group.rotation.y = Math.sin(this.elapsed * 0.9) * 0.35;
-      this.demoShip.group.position.y = 1.5 + Math.sin(this.elapsed * 2.5) * 0.18;
+      this.demoShip.group.position.y = 1.4 + Math.sin(this.elapsed * 2.5) * 0.18;
     }
   }
 
@@ -114,4 +174,3 @@ export class MenuScene implements GameSceneInterface {
     this.ctx.ui.clear();
   }
 }
-
