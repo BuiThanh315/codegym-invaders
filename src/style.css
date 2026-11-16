@@ -259,15 +259,15 @@ body,
 }
 
 .hud-pill {
-  background: rgba(15, 23, 42, 0.68);
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(56, 189, 248, 0.28);
   border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 12.5px;
+  padding: 8px 18px;
+  font-size: 14px;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   backdrop-filter: blur(12px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
   transition: background 0.2s ease, border-color 0.2s ease;
@@ -277,7 +277,7 @@ body,
   background: transparent;
   border: none;
   color: var(--text-main);
-  font-size: 14px;
+  font-size: 20px;
   cursor: pointer;
   padding: 0 2px;
   line-height: 1;
@@ -292,12 +292,17 @@ body,
 
 .hud-hearts {
   color: var(--accent-rose);
-  letter-spacing: 2px;
+  font-size: 25px;
+  line-height: 1;
+  letter-spacing: 3px;
 }
 
 .hud-score {
   color: var(--accent-gold);
   font-family: var(--font-mono);
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .boss-bar-wrap {

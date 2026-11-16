@@ -185,14 +185,14 @@ export class GameScene implements GameSceneInterface {
       this.ctx.threeScene.fog.color.setHex(stage.themeColor);
     }
 
-    // Nền không gian 3D trải rộng toàn màn hình (không có rìa 2 bên)
+    // Nền không gian 3D sáng rõ trải rộng toàn màn hình
     const bgTex = this.ctx.assets.getBackgroundTexture();
     if (bgTex) {
       const bgMat = new THREE.MeshBasicMaterial({
         map: bgTex,
-        color: new THREE.Color(stage.themeColor).lerp(new THREE.Color(0xffffff), 0.55),
+        color: new THREE.Color(stage.themeColor).lerp(new THREE.Color(0xffffff), 0.72),
         transparent: true,
-        opacity: 0.72,
+        opacity: 0.88,
       });
       this.bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(140, 140), bgMat);
       this.bgPlane.rotation.x = -Math.PI / 2;
@@ -200,10 +200,10 @@ export class GameScene implements GameSceneInterface {
       this.ctx.threeScene.add(this.bgPlane);
     }
 
-    this.gridHelper = new THREE.GridHelper(120, 60, stage.gridColor, 0x1e293b);
+    this.gridHelper = new THREE.GridHelper(120, 60, stage.gridColor, 0x334155);
     this.gridHelper.position.y = -0.35;
     (this.gridHelper.material as THREE.Material).transparent = true;
-    (this.gridHelper.material as THREE.Material).opacity = 0.35;
+    (this.gridHelper.material as THREE.Material).opacity = 0.45;
     this.ctx.threeScene.add(this.gridHelper);
   }
 

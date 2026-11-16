@@ -19,7 +19,7 @@ export function extractVoxelDataFromImage(
   maxGridSize: number,
   targetWorldHeight: number,
   depthScale = 2.4,
-  remapDarkToHex?: number
+  remapDarkToHex = 0x9333ea
 ): VoxelModelData | null {
   const srcW = image instanceof HTMLImageElement ? image.naturalWidth : image.width;
   const srcH = image instanceof HTMLImageElement ? image.naturalHeight : image.height;
@@ -46,7 +46,7 @@ export function extractVoxelDataFromImage(
   const posList: number[] = [];
   const colList: number[] = [];
   const tempColor = new THREE.Color();
-  const remapColor = remapDarkToHex !== undefined ? new THREE.Color(remapDarkToHex) : null;
+  const remapColor = new THREE.Color(remapDarkToHex);
 
   for (let y = 0; y < gridH; y++) {
     for (let x = 0; x < gridW; x++) {
@@ -62,9 +62,9 @@ export function extractVoxelDataFromImage(
       tempColor.setRGB(r, g, b, THREE.SRGBColorSpace);
       tempColor.multiplyScalar(1.22);
 
-      // Đổi các pixel quá tối sang màu tím sáng nếu được yêu cầu (ví dụ quái màn 3)
-      if (remapColor && r < 0.22 && g < 0.22 && b < 0.28) {
-        const boost = 0.75 + (r + g + b) * 1.2;
+      // Chuyển toàn bộ màu đen / quá tối sang màu tím sáng để không hòa vào background
+      if (r < 0.24 && g < 0.24 && b < 0.3) {
+        const boost = 0.8 + (r + g + b) * 1.1;
         tempColor.copy(remapColor).multiplyScalar(Math.min(1.3, boost));
       }
 
@@ -110,8 +110,8 @@ export function createVoxelInstancedMesh(
       data.positions[i * 3 + 2]
     );
     dummy.scale.set(
-      data.voxelSize * 1.05,
-      data.voxelSize * 1.05,
+      data.voxelSize * 1.08,
+      data.voxelSize * 1.08,
       data.voxelSize * data.depthScale
     );
     dummy.updateMatrix();

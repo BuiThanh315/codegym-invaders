@@ -55,7 +55,7 @@ export const STAGES_CONFIG: StageConfig[] = [
   {
     stageNumber: 1,
     title: 'Màn 1: HTML / CSS',
-    themeColor: 0x1e293b,
+    themeColor: 0x24344d,
     gridColor: 0xf97316,
     mentorIntro: 'Bắt đầu từ nền tảng nhé. Nhớ đóng thẻ đầy đủ!',
     mentorOutro: 'Làm tốt lắm. Nhưng mới là bài đầu thôi.',
@@ -76,7 +76,7 @@ export const STAGES_CONFIG: StageConfig[] = [
   {
     stageNumber: 2,
     title: 'Màn 2: JavaScript',
-    themeColor: 0x0f172a,
+    themeColor: 0x1e3a5f,
     gridColor: 0x22c55e,
     mentorIntro: 'JavaScript hơi tinh nghịch đấy. Cẩn thận kiểu dữ liệu.',
     mentorOutro: 'Biết dừng đúng lúc cũng là một kỹ năng đấy.',
@@ -97,7 +97,7 @@ export const STAGES_CONFIG: StageConfig[] = [
   {
     stageNumber: 3,
     title: 'Màn 3: Java Core',
-    themeColor: 0x0b132b,
+    themeColor: 0x262958,
     gridColor: 0x38bdf8,
     mentorIntro: 'Java chặt chẽ lắm. Một dòng sai là cả chương trình hỏng.',
     mentorOutro: 'Đến đây rồi, em đã giỏi hơn lúc mới vào lớp nhiều lắm.',
@@ -118,7 +118,7 @@ export const STAGES_CONFIG: StageConfig[] = [
   {
     stageNumber: 4,
     title: 'Màn 4: SQL / Database',
-    themeColor: 0x111827,
+    themeColor: 0x1e354f,
     gridColor: 0x3b82f6,
     mentorIntro: 'Dữ liệu là tài sản. Truy vấn cẩn thận nhé.',
     mentorOutro: 'Còn một chặng nữa thôi. Hãy cố lên nào.',
@@ -139,7 +139,7 @@ export const STAGES_CONFIG: StageConfig[] = [
   {
     stageNumber: 5,
     title: 'Màn 5: Dự án cuối khóa',
-    themeColor: 0x1e1b4b,
+    themeColor: 0x312e81,
     gridColor: 0xfb7185,
     mentorIntro: 'Chặng cuối rồi! Vượt qua Deadline để bảo vệ lễ 20/11 nào!',
     mentorOutro: 'Yeah! Chúng ta làm được rồi.',

@@ -20,8 +20,8 @@ export class SceneManager {
 
   constructor(canvas: HTMLCanvasElement) {
     const threeScene = new THREE.Scene();
-    threeScene.background = new THREE.Color(0x090d1a);
-    threeScene.fog = new THREE.FogExp2(0x090d1a, 0.016);
+    threeScene.background = new THREE.Color(0x1e293b);
+    threeScene.fog = new THREE.FogExp2(0x1e293b, 0.011);
 
     const camera = new THREE.PerspectiveCamera(
       GAME_CONSTANTS.CAMERA_FOV,

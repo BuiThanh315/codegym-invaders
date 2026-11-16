@@ -66,7 +66,7 @@ export class AssetLoader {
           if (tex) {
             this.bossTextures.set(id, tex);
             if (tex.image instanceof HTMLImageElement) {
-              const voxel = extractVoxelDataFromImage(tex.image, 54, 5.2, 2.5);
+              const voxel = extractVoxelDataFromImage(tex.image, 72, 5.4, 2.6);
               if (voxel) this.bossVoxels.set(id, voxel);
             }
           }
