@@ -92,9 +92,12 @@ export class MenuScene implements GameSceneInterface {
             <div class="menu-card leaderboard-card">
               <div class="lb-header">
                 <span class="lb-badge">🏆 BẢNG XẾP HẠNG TOP 10</span>
-                <span class="lb-sub">Điểm cao nhất</span>
+                <div class="lb-actions">
+                  <span class="lb-sub">Điểm cao nhất</span>
+                  ${top10.length > 0 ? '<button id="clear-lb-btn" class="lb-clear-btn" title="Xóa bảng xếp hạng">🗑️ Xóa</button>' : ''}
+                </div>
               </div>
-              <div class="lb-list">
+              <div id="lb-list" class="lb-list">
                 ${leaderboardRows}
               </div>
             </div>
@@ -110,6 +113,16 @@ export class MenuScene implements GameSceneInterface {
     const input = document.getElementById('player-name-input') as HTMLInputElement;
     const btn = document.getElementById('start-game-btn') as HTMLButtonElement;
     const feedback = document.getElementById('easter-egg-feedback') as HTMLElement;
+    const clearLbBtn = document.getElementById('clear-lb-btn');
+    const lbList = document.getElementById('lb-list');
+
+    clearLbBtn?.addEventListener('click', () => {
+      LeaderboardManager.clear();
+      if (lbList) {
+        lbList.innerHTML = `<div class="lb-empty">Chưa có lượt chơi nào.<br/>Hãy là người đầu tiên ghi danh! ✨</div>`;
+      }
+      clearLbBtn.remove();
+    });
 
     const checkEasterEgg = (val: string) => {
       const normalized = val.trim().toLowerCase();

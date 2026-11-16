@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { classConfig } from '../config/classConfig';
-import { getRankByScore } from '../config/gameConstants';
 import { LeaderboardManager } from '../systems/LeaderboardManager';
 import { GameContext, GameSceneInterface } from './SceneTypes';
 
@@ -16,8 +15,8 @@ export class EndingScene implements GameSceneInterface {
     this.ctx.sound.setFestiveMode(true);
     this.ctx.sound.startBgm();
 
-    const rank = getRankByScore(this.ctx.score);
-    LeaderboardManager.saveScore(this.ctx.playerName, this.ctx.score, rank.title);
+    const { placement, rank } = LeaderboardManager.saveScore(this.ctx.playerName, this.ctx.score);
+    const placementText = placement !== null ? `Hạng #${placement} BXH • ` : '';
 
     const letterText = `Gửi ${classConfig.teacherName},
 
@@ -47,7 +46,7 @@ Học trò của Thầy/Cô, ${this.ctx.playerName} và tập thể ${classConfi
           <div class="letter-title">🌹 LÁ THƯ TRI ÂN NGÀY 20/11 🌹</div>
           <div id="letter-body" class="letter-body"></div>
           <div class="rank-box">
-            <div style="font-size:13px;color:#94a3b8;margin-bottom:4px;">Danh hiệu của ${this.ctx.ui.escapeHtml(this.ctx.playerName)} (${this.ctx.score} điểm)</div>
+            <div style="font-size:13px;color:#94a3b8;margin-bottom:4px;">Danh hiệu của ${this.ctx.ui.escapeHtml(this.ctx.playerName)} (${placementText}${this.ctx.score} điểm)</div>
             <div class="rank-badge">🏆 ${this.ctx.ui.escapeHtml(rank.title)}</div>
             <div style="font-size:13px;color:#f8fafc;margin-top:4px;">"${this.ctx.ui.escapeHtml(rank.message)}"</div>
           </div>

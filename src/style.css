@@ -204,6 +204,30 @@ body,
   color: var(--text-muted);
 }
 
+.lb-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lb-clear-btn {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.lb-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  color: #fff;
+}
+
 .lb-list {
   display: flex;
   flex-direction: column;
@@ -493,6 +517,23 @@ body,
   font-size: 25px;
   line-height: 1;
   letter-spacing: 3px;
+}
+
+.hud-timer {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.hud-timer.urgent {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.65);
 }
 
 .hud-score {

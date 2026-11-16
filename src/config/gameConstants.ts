@@ -36,32 +36,43 @@ export const GAME_CONSTANTS = {
   SCORE_BOSS: 500,
   SCORE_FLOWER_PICKUP: 10,
   SCORE_MAX_HP_BONUS: 50,
+
+  // Giới hạn thời gian mỗi giai đoạn (giây)
+  MINION_PHASE_TIME_LIMIT: 60,
+  BOSS_PHASE_TIME_LIMIT: 90,
 } as const;
 
-export const RANK_TIERS: RankTier[] = [
-  {
-    minScore: 9000,
+export const RANK_BY_PLACEMENT: Record<'top3' | 'mid' | 'newbie', RankTier> = {
+  top3: {
+    minScore: 1,
     title: 'Học trò ruột của Thầy/Cô',
     message: 'Thầy cô chắc chắn sẽ tự hào về em!',
   },
-  {
-    minScore: 4500,
+  mid: {
+    minScore: 4,
     title: 'Debug Master',
     message: 'Bug nhìn thấy em là run!',
   },
-  {
-    minScore: 0,
+  newbie: {
+    minScore: 8,
     title: 'Học viên mới',
     message: 'Hành trình mới bắt đầu!',
   },
-];
+};
 
-export function getRankByScore(score: number): RankTier {
-  for (const tier of RANK_TIERS) {
-    if (score >= tier.minScore) {
-      return tier;
-    }
+/**
+ * Cấp danh hiệu dựa trên vị trí (1-based) trên bảng xếp hạng hiện tại:
+ * - Hạng 1–3: Học trò ruột của Thầy/Cô
+ * - Hạng 4–7: Debug Master
+ * - Hạng 8–10 (hoặc ngoài Top 10): Học viên mới
+ */
+export function getRankByPlacement(placement: number | null): RankTier {
+  if (placement !== null && placement >= 1 && placement <= 3) {
+    return RANK_BY_PLACEMENT.top3;
   }
-  return RANK_TIERS[RANK_TIERS.length - 1];
+  if (placement !== null && placement >= 4 && placement <= 7) {
+    return RANK_BY_PLACEMENT.mid;
+  }
+  return RANK_BY_PLACEMENT.newbie;
 }
 

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { classConfig } from '../config/classConfig';
-import { GAME_CONSTANTS, getRankByScore } from '../config/gameConstants';
+import { GAME_CONSTANTS } from '../config/gameConstants';
 import { StageConfig, STAGES_CONFIG } from '../config/stagesConfig';
 import { Boss3D } from '../entities/Boss3D';
 import { Enemy3D } from '../entities/Enemy3D';
@@ -24,6 +24,7 @@ export class GameScene implements GameSceneInterface {
   private waveShootTimer = 2.5;
   private phaseKillCount = 0;
   private formationTime = 0;
+  private phaseTimer = 0;
   private state: 'intro_delay' | 'waves' | 'boss' | 'stage_clear' | 'game_over' = 'intro_delay';
   private stateTimer = 0;
   private shakeTimer = 0;
@@ -39,6 +40,7 @@ export class GameScene implements GameSceneInterface {
   private hudHeartsEl: HTMLElement | null = null;
   private hudScoreEl: HTMLElement | null = null;
   private hudStageEl: HTMLElement | null = null;
+  private hudTimerEl: HTMLElement | null = null;
   private bossBarWrapEl: HTMLElement | null = null;
   private bossNameEl: HTMLElement | null = null;
   private bossHpTextEl: HTMLElement | null = null;
@@ -91,7 +93,8 @@ export class GameScene implements GameSceneInterface {
         <div class="hud-top">
           <div class="hud-pill">
             <span id="hud-stage">Màn 1</span>
-            <span id="hud-hearts" class="hud-hearts">❤❤❤❤❤</span>
+            <span id="hud-timer" class="hud-timer"></span>
+            <span id="hud-hearts" class="hud-hearts">❤❤❤</span>
           </div>
           <div class="hud-pill">
             <span>${this.ctx.ui.escapeHtml(this.ctx.playerName)}</span>
@@ -114,6 +117,7 @@ export class GameScene implements GameSceneInterface {
     this.hudHeartsEl = document.getElementById('hud-hearts');
     this.hudScoreEl = document.getElementById('hud-score');
     this.hudStageEl = document.getElementById('hud-stage');
+    this.hudTimerEl = document.getElementById('hud-timer');
     this.bossBarWrapEl = document.getElementById('boss-bar-wrap');
     this.bossNameEl = document.getElementById('boss-name');
     this.bossHpTextEl = document.getElementById('boss-hp-text');
@@ -260,13 +264,14 @@ export class GameScene implements GameSceneInterface {
       const targetZ = startZ + row * rowSpacingZ;
 
       const type = stage.minionTypes[(i + this.waveIndex) % stage.minionTypes.length];
+      const minionHp = stage.stageNumber * GAME_CONSTANTS.ROSE_DAMAGE;
       const enemy = new Enemy3D(
         this.ctx.threeScene,
         this.ctx.assets,
         type,
         targetX,
         targetZ,
-        GAME_CONSTANTS.MINION_HP,
+        minionHp,
         stage.stageNumber,
         i
       );
@@ -276,10 +281,24 @@ export class GameScene implements GameSceneInterface {
 
   private spawnBoss(): void {
     const stage = this.currentStage();
+    this.phaseTimer = GAME_CONSTANTS.BOSS_PHASE_TIME_LIMIT;
     this.boss = new Boss3D(this.ctx.threeScene, this.ctx.assets, stage.boss);
     this.ctx.sound.playBossWarning();
     this.ctx.ui.showDialogue(stage.boss.name, stage.boss.introLine, 'boss', 3500, stage.boss.id);
     this.syncBossBar();
+    this.syncTimerHud();
+  }
+
+  private syncTimerHud(): void {
+    if (!this.hudTimerEl) return;
+    if (this.state === 'waves' || this.state === 'boss') {
+      const secs = Math.ceil(this.phaseTimer);
+      this.hudTimerEl.textContent = `⏱️ ${secs}s`;
+      this.hudTimerEl.classList.toggle('urgent', secs <= 10);
+      this.hudTimerEl.style.display = 'inline-block';
+    } else {
+      this.hudTimerEl.style.display = 'none';
+    }
   }
 
   private syncHud(): void {
@@ -350,9 +369,20 @@ export class GameScene implements GameSceneInterface {
       this.stateTimer -= dt;
       if (this.stateTimer <= 0) {
         this.state = 'waves';
+        this.phaseTimer = GAME_CONSTANTS.MINION_PHASE_TIME_LIMIT;
         this.spawnWave();
+        this.syncTimerHud();
       }
     } else if (this.state === 'waves') {
+      this.phaseTimer = Math.max(0, this.phaseTimer - dt);
+      this.syncTimerHud();
+      if (this.phaseTimer <= 0) {
+        // Hết 60s màn quái thường: xóa quái còn lại và chuyển sang màn Boss của chặng hiện tại
+        this.clearStageEntities();
+        this.state = 'boss';
+        this.spawnBoss();
+        return;
+      }
       if (this.enemies.length === 0) {
         this.waveIndex++;
         if (this.waveIndex < this.currentStage().waveCount) {
@@ -361,6 +391,27 @@ export class GameScene implements GameSceneInterface {
           this.state = 'boss';
           this.spawnBoss();
         }
+      }
+    } else if (this.state === 'boss') {
+      this.phaseTimer = Math.max(0, this.phaseTimer - dt);
+      this.syncTimerHud();
+      if (this.phaseTimer <= 0) {
+        // Hết 90s đấu Boss chưa hạ được Boss: trừ 1 mạng; nếu còn mạng thì trực tiếp chuyển tiếp sang màn tiếp theo
+        this.player.hp = Math.max(0, this.player.hp - 1);
+        this.ctx.sound.playPlayerHit();
+        this.syncHud();
+        if (this.player.hp <= 0) {
+          this.triggerGameOver('Hết 90 giây đấu Boss và đã hết mạng rồi! Thử lại nhé!');
+        } else {
+          this.ctx.ui.showDialogue(
+            classConfig.teacherName,
+            `Hết 90 giây đấu Boss! Trừ 1 ❤ (còn ${this.player.hp} ❤), tiến tới màn tiếp theo nhé!`,
+            'mentor',
+            2600
+          );
+          this.advanceToNextStage();
+        }
+        return;
       }
     } else if (this.state === 'stage_clear') {
       this.stateTimer -= dt;
@@ -577,6 +628,7 @@ export class GameScene implements GameSceneInterface {
 
     this.state = 'stage_clear';
     this.stateTimer = 3.8;
+    this.syncTimerHud();
   }
 
   private damagePlayer(): void {
@@ -591,13 +643,15 @@ export class GameScene implements GameSceneInterface {
     }
   }
 
-  private triggerGameOver(): void {
+  private triggerGameOver(customQuote?: string, keepRemainingHp = false): void {
     this.state = 'game_over';
-    const rank = getRankByScore(this.ctx.score);
-    LeaderboardManager.saveScore(this.ctx.playerName, this.ctx.score, rank.title);
+    this.syncTimerHud();
+    if (!keepRemainingHp) {
+      LeaderboardManager.saveScore(this.ctx.playerName, this.ctx.score);
+    }
 
     const msgs = classConfig.gameOverMessages;
-    const quote = msgs[Math.floor(Math.random() * msgs.length)];
+    const quote = customQuote ?? msgs[Math.floor(Math.random() * msgs.length)];
 
     const root = this.ctx.ui.getRoot();
     const modal = document.createElement('div');
@@ -615,7 +669,11 @@ export class GameScene implements GameSceneInterface {
 
     document.getElementById('retry-stage-btn')?.addEventListener('click', () => {
       modal.remove();
+      const remainingHp = this.player?.hp ?? 0;
       this.player?.reset();
+      if (keepRemainingHp && this.player && remainingHp > 0) {
+        this.player.hp = remainingHp;
+      }
       this.projectiles?.clearAll();
       this.startStage(this.stageIndex);
     });
@@ -623,6 +681,16 @@ export class GameScene implements GameSceneInterface {
     document.getElementById('back-menu-btn')?.addEventListener('click', () => {
       this.ctx.switchScene('menu');
     });
+  }
+
+  private advanceToNextStage(): void {
+    this.clearStageEntities();
+    if (this.stageIndex + 1 < STAGES_CONFIG.length) {
+      this.startStage(this.stageIndex + 1);
+    } else {
+      this.ctx.sound.playVictory();
+      this.ctx.switchScene('ending');
+    }
   }
 
   private clearStageEntities(): void {
