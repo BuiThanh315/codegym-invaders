@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { BossConfig } from '../config/stagesConfig';
 import { AssetLoader } from '../systems/AssetLoader';
+import { createVoxelInstancedMesh } from '../systems/VoxelBuilder';
 
 export interface BossUpdateCallbacks {
   onHalfHp: (line: string) => void;
@@ -22,11 +23,13 @@ export class Boss3D {
 
   private readonly coreGroup = new THREE.Group();
   private readonly ringMesh: THREE.Mesh;
+  private voxelBody: THREE.InstancedMesh | null = null;
   private elapsed = 0;
   private halfTriggered = false;
   private currentPhase: 1 | 2 | 3 = 1;
   private attackTimer = 0.8;
   private spiralAngle = 0;
+  private boss4Pattern = 0;
   private teleportTimer = 0;
   private isHidden = false;
 
@@ -37,14 +40,12 @@ export class Boss3D {
     this.group.position.set(0, 1.0, -10.5);
     this.group.add(this.coreGroup);
 
-    const bossTex = assets.getBossTexture(config.id);
-    if (bossTex) {
-      const bossSprite = new THREE.Sprite(
-        new THREE.SpriteMaterial({ map: bossTex, transparent: true })
-      );
-      bossSprite.scale.set(4.2, 5.2, 1);
-      bossSprite.position.set(0, 1.4, 0);
-      this.coreGroup.add(bossSprite);
+    const bossVoxel = assets.getBossVoxel(config.id);
+    if (bossVoxel) {
+      this.voxelBody = createVoxelInstancedMesh(bossVoxel);
+      this.voxelBody.position.set(0, 1.55, 0);
+      this.voxelBody.rotation.x = -0.32;
+      this.coreGroup.add(this.voxelBody);
     } else {
       const mainMat = new THREE.MeshStandardMaterial({
         color: config.color,
@@ -131,6 +132,9 @@ export class Boss3D {
     if (!this.alive) return;
     this.elapsed += dt;
     this.ringMesh.rotation.z += dt * (this.config.id === 2 ? 2.7 : 1.1);
+    if (this.voxelBody) {
+      this.voxelBody.rotation.y = Math.sin(this.elapsed * 1.1) * 0.26;
+    }
 
     const hpRatio = this.hp / this.config.maxHp;
 
@@ -225,11 +229,33 @@ export class Boss3D {
       const dir = playerPos.clone().sub(origin).normalize();
       cb.onShoot(origin, dir.x * 6.6, dir.z * 6.6, bossColor);
     } else if (effectiveId === 4) {
-      // DROP TABLE: mưa trụ dữ liệu trải rộng cả 2 bên màn hình
-      this.attackTimer = 2.1;
-      const step = Math.max(3, patrolSpan / 2);
-      for (let x = -patrolSpan; x <= patrolSpan + 0.1; x += step) {
-        cb.onShoot(new THREE.Vector3(x, 0.6, origin.z), 0, 5.7, bossColor);
+      // DROP TABLE: luân phiên 3 kiểu tấn công tăng độ khó (mưa cột so le, quạt 5 tia, đạn chéo 2 bên)
+      this.attackTimer = 1.45;
+      const pattern = this.boss4Pattern % 3;
+      this.boss4Pattern++;
+
+      if (pattern === 0) {
+        // Mưa cột dữ liệu so le trái/phải
+        const step = Math.max(2.6, patrolSpan / 2.5);
+        const shift = this.boss4Pattern % 2 === 0 ? 0.9 : -0.9;
+        for (let x = -patrolSpan + shift; x <= patrolSpan; x += step) {
+          cb.onShoot(new THREE.Vector3(x, 0.6, origin.z), 0, 5.8, bossColor);
+        }
+      } else if (pattern === 1) {
+        // Quạt 5 tia nhắm về hướng người chơi
+        const baseDir = playerPos.clone().sub(origin).normalize();
+        const baseAngle = Math.atan2(baseDir.x, baseDir.z);
+        for (const offset of [-0.42, -0.21, 0, 0.21, 0.42]) {
+          const a = baseAngle + offset;
+          cb.onShoot(origin, Math.sin(a) * 6.4, Math.cos(a) * 6.4, bossColor);
+        }
+      } else {
+        // Đạn chéo 2 bên sườn + 1 tia giữa
+        cb.onShoot(origin, 0, 6.8, bossColor);
+        cb.onShoot(new THREE.Vector3(origin.x - 2.0, 0.6, origin.z), -2.4, 5.8, bossColor);
+        cb.onShoot(new THREE.Vector3(origin.x + 2.0, 0.6, origin.z), 2.4, 5.8, bossColor);
+        cb.onShoot(new THREE.Vector3(origin.x - 2.0, 0.6, origin.z), 2.2, 5.8, bossColor);
+        cb.onShoot(new THREE.Vector3(origin.x + 2.0, 0.6, origin.z), -2.2, 5.8, bossColor);
       }
     } else {
       // Boss 5 Phase 3 ("Còn 1 giờ!!!"): mưa đạn dồn dập (nhịp độ giảm 40%)

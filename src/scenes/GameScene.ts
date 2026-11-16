@@ -20,6 +20,9 @@ export class GameScene implements GameSceneInterface {
 
   private stageIndex = 0;
   private waveIndex = 0;
+  private waveShootTimer = 2.5;
+  private phaseKillCount = 0;
+  private formationTime = 0;
   private state: 'intro_delay' | 'waves' | 'boss' | 'stage_clear' | 'game_over' = 'intro_delay';
   private stateTimer = 0;
   private shakeTimer = 0;
@@ -234,20 +237,37 @@ export class GameScene implements GameSceneInterface {
 
   private spawnWave(): void {
     const stage = this.currentStage();
-    const count = stage.minionsPerWave;
-    const halfSpan = this.getVisibleHalfWidth() * 0.85;
-    const spacing = (halfSpan * 2) / Math.max(1, count - 1);
+    const rows = 3;
+    const cols = 5;
+    const total = stage.minionsPerWave; // 15 quái mỗi phase
+    const halfSpan = this.getVisibleHalfWidth() * 0.78;
+    const spacingX = (halfSpan * 2) / Math.max(1, cols - 1);
     const startX = -halfSpan;
+    const startZ = -11.2;
+    const rowSpacingZ = 2.4;
 
-    for (let i = 0; i < count; i++) {
+    this.waveShootTimer = 2.5;
+    this.phaseKillCount = 0;
+    this.formationTime = 0;
+
+    for (let i = 0; i < total; i++) {
+      const row = Math.floor(i / cols) % rows;
+      const col = i % cols;
+      // Xếp 3 hàng so le nhau (hàng lẻ lệch nửa bước)
+      const staggerOffset = row % 2 === 1 ? spacingX * 0.42 : -spacingX * 0.12;
+      const targetX = startX + col * spacingX + staggerOffset;
+      const targetZ = startZ + row * rowSpacingZ;
+
       const type = stage.minionTypes[(i + this.waveIndex) % stage.minionTypes.length];
       const enemy = new Enemy3D(
         this.ctx.threeScene,
         this.ctx.assets,
         type,
-        startX + i * spacing,
-        -12.5 - (i % 2) * 1.8,
-        GAME_CONSTANTS.MINION_HP
+        targetX,
+        targetZ,
+        GAME_CONSTANTS.MINION_HP,
+        stage.stageNumber,
+        i
       );
       this.enemies.push(enemy);
     }
@@ -354,14 +374,27 @@ export class GameScene implements GameSceneInterface {
       }
     }
 
-    // Update quái thường (nhịp độ giảm 40%, di chuyển rộng cả 2 bên, đạn đỏ tươi)
-    const speedMult = 1 + this.stageIndex * 0.08;
+    // Update quái thường: di chuyển vào 3 hàng so le, giữ đội hình & mỗi 1.5s có 3 quái bắn ngẫu nhiên
+    this.formationTime += dt;
     for (const enemy of this.enemies) {
-      enemy.update(dt, speedMult, visibleHalfWidth, (pos) => {
-        this.projectiles?.spawnEnemyBullet(pos, 0, 4.9 + this.stageIndex * 0.36, 0xff1e42);
-      });
-      if (enemy.group.position.z > GAME_CONSTANTS.FIELD_MAX_Z) {
-        enemy.alive = false;
+      enemy.update(dt, visibleHalfWidth, this.formationTime);
+    }
+
+    if (this.state === 'waves' && this.enemies.length > 0) {
+      this.waveShootTimer -= dt;
+      if (this.waveShootTimer <= 0) {
+        this.waveShootTimer = 2.5;
+        const readyShooters = this.enemies.filter((e) => e.alive && e.state !== 'entering');
+        for (let s = 0; s < 3 && readyShooters.length > 0; s++) {
+          const pickIdx = Math.floor(Math.random() * readyShooters.length);
+          const shooter = readyShooters.splice(pickIdx, 1)[0];
+          this.projectiles.spawnEnemyBullet(
+            shooter.group.position.clone(),
+            0,
+            4.9 + this.stageIndex * 0.36,
+            0xff1e42
+          );
+        }
       }
     }
 
@@ -424,6 +457,18 @@ export class GameScene implements GameSceneInterface {
               this.ctx.particles.spawnBurst(enemy.group.position, 14);
               this.spawnMinionDrop(enemy.group.position);
               this.syncHud();
+
+              // Cứ mỗi 3 quái bị tiêu diệt -> 1 quái ngẫu nhiên lao xuống chỗ người chơi rồi quay lại
+              this.phaseKillCount++;
+              if (this.phaseKillCount % 3 === 0) {
+                const candidates = this.enemies.filter(
+                  (e) => e.alive && e.state === 'formation'
+                );
+                if (candidates.length > 0) {
+                  const diver = candidates[Math.floor(Math.random() * candidates.length)];
+                  diver.startDive(pPos);
+                }
+              }
             }
             break;
           }

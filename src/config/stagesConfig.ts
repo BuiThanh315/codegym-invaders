@@ -61,7 +61,7 @@ export const STAGES_CONFIG: StageConfig[] = [
     mentorOutro: 'Làm tốt lắm. Nhưng mới là bài đầu thôi.',
     minionTypes: ['<div>', '<br>', '<p>'],
     waveCount: 2,
-    minionsPerWave: 6,
+    minionsPerWave: 15,
     boss: {
       id: 1,
       name: 'Boss 1: Thẻ Không Đóng',
@@ -82,7 +82,7 @@ export const STAGES_CONFIG: StageConfig[] = [
     mentorOutro: 'Biết dừng đúng lúc cũng là một kỹ năng đấy.',
     minionTypes: ['undefined', 'NaN', '[object Object]'],
     waveCount: 2,
-    minionsPerWave: 7,
+    minionsPerWave: 15,
     boss: {
       id: 2,
       name: 'Boss 2: Vòng Lặp Vô Hạn',
@@ -103,7 +103,7 @@ export const STAGES_CONFIG: StageConfig[] = [
     mentorOutro: 'Đến đây rồi, em đã giỏi hơn lúc mới vào lớp nhiều lắm.',
     minionTypes: ['null', 'Exception', 'ClassNotFound'],
     waveCount: 2,
-    minionsPerWave: 8,
+    minionsPerWave: 15,
     boss: {
       id: 3,
       name: 'Boss 3: NullPointerException',
@@ -124,7 +124,7 @@ export const STAGES_CONFIG: StageConfig[] = [
     mentorOutro: 'Còn một chặng nữa thôi. Hãy cố lên nào.',
     minionTypes: ['SELECT *', 'JOIN', 'WHERE 1=1'],
     waveCount: 2,
-    minionsPerWave: 8,
+    minionsPerWave: 15,
     boss: {
       id: 4,
       name: 'Boss 4: DROP TABLE',
@@ -145,7 +145,7 @@ export const STAGES_CONFIG: StageConfig[] = [
     mentorOutro: 'Yeah! Chúng ta làm được rồi.',
     minionTypes: ['<div>', 'NaN', 'Exception', 'SELECT *'],
     waveCount: 2,
-    minionsPerWave: 9,
+    minionsPerWave: 15,
     boss: {
       id: 5,
       name: 'Boss 5: DEADLINE',

@@ -34,10 +34,10 @@ export class SceneManager {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Ánh sáng 3D dịu mắt
-    const ambient = new THREE.AmbientLight(0xffffff, 0.9);
-    const dirLight = new THREE.DirectionalLight(0xe0f2fe, 1.15);
-    dirLight.position.set(8, 20, 12);
+    // Ánh sáng 3D sáng rõ giúp chi tiết Voxel của quái và Boss nổi bật
+    const ambient = new THREE.AmbientLight(0xffffff, 1.35);
+    const dirLight = new THREE.DirectionalLight(0xf0f9ff, 1.25);
+    dirLight.position.set(6, 22, 16);
     threeScene.add(ambient, dirLight);
 
     // Nền sao 3D nhẹ nhàng giúp không gian có chiều sâu

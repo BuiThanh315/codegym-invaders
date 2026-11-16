@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { MinionType } from '../config/stagesConfig';
+import { extractVoxelDataFromImage, VoxelModelData } from './VoxelBuilder';
 
 const MINION_SPRITE_MAP: Record<MinionType, string> = {
   '<div>': 'div',
@@ -24,7 +25,9 @@ export class AssetLoader {
   private readonly loader = new THREE.TextureLoader();
   private readonly labelCache = new Map<string, THREE.CanvasTexture>();
   private readonly minionTextures = new Map<string, THREE.Texture>();
+  private readonly minionVoxels = new Map<string, VoxelModelData>();
   private readonly bossTextures = new Map<number, THREE.Texture>();
+  private readonly bossVoxels = new Map<number, VoxelModelData>();
   private bgTexture: THREE.Texture | null = null;
 
   public async preload(): Promise<void> {
@@ -45,7 +48,14 @@ export class AssetLoader {
     for (const key of uniqueMinions) {
       tasks.push(
         this.loadTexture(`./assets/minions/${key}.png`).then((tex) => {
-          if (tex) this.minionTextures.set(key, tex);
+          if (tex) {
+            this.minionTextures.set(key, tex);
+            if (tex.image instanceof HTMLImageElement) {
+              const remapHex = key === 'null' ? 0xa855f7 : undefined;
+              const voxel = extractVoxelDataFromImage(tex.image, 34, 2.0, 2.2, remapHex);
+              if (voxel) this.minionVoxels.set(key, voxel);
+            }
+          }
         })
       );
     }
@@ -53,7 +63,13 @@ export class AssetLoader {
     for (let id = 1; id <= 5; id++) {
       tasks.push(
         this.loadTexture(`./assets/bosses/boss-${id}.png`).then((tex) => {
-          if (tex) this.bossTextures.set(id, tex);
+          if (tex) {
+            this.bossTextures.set(id, tex);
+            if (tex.image instanceof HTMLImageElement) {
+              const voxel = extractVoxelDataFromImage(tex.image, 54, 5.2, 2.5);
+              if (voxel) this.bossVoxels.set(id, voxel);
+            }
+          }
         })
       );
     }
@@ -84,8 +100,17 @@ export class AssetLoader {
     return this.minionTextures.get(key) ?? null;
   }
 
+  public getMinionVoxel(type: MinionType): VoxelModelData | null {
+    const key = MINION_SPRITE_MAP[type];
+    return this.minionVoxels.get(key) ?? null;
+  }
+
   public getBossTexture(id: number): THREE.Texture | null {
     return this.bossTextures.get(id) ?? null;
+  }
+
+  public getBossVoxel(id: number): VoxelModelData | null {
+    return this.bossVoxels.get(id) ?? null;
   }
 
   public getCodeLabelTexture(text: string, bgHex = '#0f172a', borderHex = '#38bdf8'): THREE.CanvasTexture {
