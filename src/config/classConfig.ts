@@ -25,7 +25,7 @@ export const classConfig: ClassConfig = {
   className: getQueryParam('class') || 'CodeGym',
   teacherCatchphrase: '',
   classMemory:
-    'Cảm ơn Thầy/Cô đã luôn kiên nhẫn lắng nghe từng câu hỏi, đồng hành qua từng dòng code lỗi và truyền cảm hứng cho chúng em mỗi ngày.',
+    'Từ những ngày đầu bỡ ngỡ với từng cặp thẻ <div>, những lần bối rối trước lỗi undefined hay NullPointerException, cho đến những đêm chạy nước rút cùng dự án cuối khóa — ở chặng đường nào chúng em cũng thấy bóng dáng tận tụy của Thầy/Cô. Thầy/Cô không chỉ dạy chúng em cách viết code chạy được, mà còn truyền cho chúng em sự kiên trì, tư duy giải quyết vấn đề và niềm tin không bao giờ bỏ cuộc trước bất kỳ thử thách nào.',
   studentList: [],
   easterEggKeywords: ['20/11', 'codegym', 'thầy cô', 'thay co'],
   skipToEndingCommand: 'sudo thank-you',
